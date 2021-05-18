@@ -37,19 +37,19 @@ static InterpretResult run() {
         push(a op b); \
     } while (false)
 
+    for (;;) {
 #ifdef DEBUG_TRACE_EXECUTION
-    disassembleInstruction(vm.chunk,
-                           (int)(vm.ip - vm.chunk->code));
-    printf("          ");
-    for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
-        printf("[ ");
-        printValue(*slot);
-        printf(" ]");
-    }
-    printf("\n");
+        disassembleInstruction(vm.chunk,
+                (int)(vm.ip - vm.chunk->code));
+        printf("          ");
+        for (Value* slot = vm.stack; slot < vm.stackTop; slot++) {
+            printf("[ ");
+            printValue(*slot);
+            printf(" ]");
+        }
+        printf("\n");
 #endif
 
-    for (;;) {
         u8 instruction;
         switch (instruction = READ_BYTE()) {
             case OP_RETURN: {
@@ -65,7 +65,6 @@ static InterpretResult run() {
             case OP_CONSTANT: {
                 Value constant = READ_CONSTANT();
                 push(constant);
-                printValue(constant);
                 printf("\n");
                 break;
             }
