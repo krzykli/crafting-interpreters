@@ -1,4 +1,5 @@
 echo "Compiling..."
-gcc -Wall -I./include -o clox *.c
-echo "Running clox"
-./clox
+if (gcc -Wall -I./include -o clox *.c) then
+    echo "Running clox"
+    ./clox
+fi
