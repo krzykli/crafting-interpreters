@@ -25,10 +25,20 @@ static Obj* allocateObject(size_t size, ObjType type) {
     return object;
 }
 
-static ObjString* allocateString(char* chars, int length) {
-    ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
+/*static ObjString* allocateString(char* chars, int length) {*/
+    /*ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);*/
+    /*string->length = length;*/
+    /*[>string->chars = chars;<]*/
+    /*memcpy(string->chars, chars, length);*/
+    /*return string;*/
+/*}*/
+
+ObjString* allocateString(char* chars, int length) {
+    size_t stringSize = sizeof(ObjString) + sizeof(char) * length + 1;
+    ObjString* string = (ObjString*)allocateObject(stringSize, OBJ_STRING);
     string->length = length;
-    string->chars = chars;
+    memcpy(string->chars, chars, length);
+    string->chars[length] = '\0';
     return string;
 }
 
@@ -37,9 +47,6 @@ ObjString* takeString(char* chars, int length) {
 }
 
 ObjString* copyString(const char* chars, int length) {
-    char* heapChars = ALLOCATE(char, length + 1);
-    memcpy(heapChars, chars, length);
-    heapChars[length] = '\0';
-    return allocateString(heapChars, length);
+    return allocateString(chars, length);
 }
 
