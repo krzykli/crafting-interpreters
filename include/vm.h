@@ -6,7 +6,7 @@
 #define STACK_MAX 256
 
 #include "value.h"
-
+#include "table.h"
 #include "chunk.h"
 
 
@@ -21,6 +21,7 @@ typedef struct {
     u8* ip;
     Value stack[STACK_MAX];
     Value* stackTop;
+    Table strings;
     Obj* objects;
 } VM;
 
