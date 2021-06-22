@@ -19,7 +19,7 @@ void freeTable(Table* table) {
     initTable(table);
 }
 
-static Entry* findEntry(Entry* entries, int capacity, ObjString* key) {
+static Entry* findEntry(Entry* entries, int capacity, Obj* key) {
     uint32_t index = key->hash % capacity;
     Entry* tombstone = NULL;
     for (;;) {
@@ -65,7 +65,7 @@ static void adjustCapacity(Table* table, int capacity) {
     table->capacity = capacity;
 }
 
-bool tableGet(Table* table, ObjString* key, Value* value) {
+bool tableGet(Table* table, Obj* key, Value* value) {
     if (table->count == 0) return false;
 
     Entry* entry = findEntry(table->entries, table->capacity, key);
@@ -75,7 +75,7 @@ bool tableGet(Table* table, ObjString* key, Value* value) {
     return true;
 }
 
-bool tableSet(Table* table, ObjString* key, Value value) {
+bool tableSet(Table* table, Obj* key, Value value) {
     if (table->count + 1 > table->capacity * TABLE_MAX_LOAD) {
         int capacity = GROW_CAPACITY(table->capacity);
         adjustCapacity(table, capacity);
@@ -89,7 +89,7 @@ bool tableSet(Table* table, ObjString* key, Value value) {
     return isNewKey;
 }
 
-bool tableDelete(Table* table, ObjString* key) {
+bool tableDelete(Table* table, Obj* key) {
     if (table->count == 0) return false;
 
     // Find the entry.
@@ -111,22 +111,17 @@ void tableAddAll(Table* from, Table* to) {
     }
 }
 
-ObjString* tableFindString(Table* table, const char* chars, int length, uint32_t hash) {
+Obj* tableFindObject(Table* table, uint32_t hash) {
     if (table->count == 0) return NULL;
 
     uint32_t index = hash % table->capacity;
     for (;;) {
         Entry* entry = &table->entries[index];
         if (entry->key == NULL) {
-            // Stop if we find an empty non-tombstone entry.
             if (IS_NIL(entry->value)) return NULL;
-        } else if (entry->key->length == length &&
-                entry->key->hash == hash &&
-                memcmp(entry->key->chars, chars, length) == 0) {
-            // We found it.
+        } else if (entry->key->hash == hash) {
             return entry->key;
         }
-
         index = (index + 1) % table->capacity;
     }
 }

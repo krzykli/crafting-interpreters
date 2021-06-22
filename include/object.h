@@ -16,10 +16,13 @@ void printObject(Value value);
 
 typedef enum {
     OBJ_STRING,
+    OBJ_INT,
+    OBJ_BOOL
 } ObjType;
 
 struct Obj {
     ObjType type;
+    u32 hash;
     struct Obj* next;
 };
 
@@ -27,8 +30,17 @@ struct ObjString {
     Obj obj;
     int length;
     char* chars;
-    u32 hash;
 };
+
+typedef struct ObjInt {
+    Obj obj;
+    int value;
+} ObjInt;
+
+typedef struct ObjBool {
+    Obj obj;
+    bool value;
+} ObjBool;
 
 ObjString* copyString(const char* chars, int length);
 
