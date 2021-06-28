@@ -1,3 +1,5 @@
 
 clox
 clox*
+.ccls*
+compile_commands.json
