@@ -33,8 +33,6 @@ typedef enum {
 
 typedef void (*ParseFn)(bool canAssign);
 
-
-
 typedef struct {
     ParseFn prefix;
     ParseFn infix;
