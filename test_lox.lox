@@ -5,3 +5,11 @@ var breakfast = "beignets";
 var beverage = "cafe au lait";
 breakfast = "beignets with " + beverage;
 print breakfast;
+{
+    var test_var = "what is this ";
+    var test_var2 = "thing";
+    {
+        var test_var2 = "thing";
+    }
+    print test_var + test_var2;
+}
