@@ -5,6 +5,7 @@
 #include "common.h"
 #include "compiler.h"
 #include "scanner.h"
+#include "memory.h"
 
 #ifdef DEBUG_PRINT_CODE
 #include "debug.h"
@@ -46,7 +47,8 @@ typedef struct {
 } Local;
 
 typedef struct {
-    Local locals[UINT8_COUNT];
+    Local* locals;
+    int localCapacity;
     int localCount;
     int scopeDepth;
 } Compiler;
@@ -256,9 +258,11 @@ static int resolveLocal(Compiler* compiler, Token* name) {   // NOTE(kk): Why pa
 }
 
 static void addLocal(Token name) {
-    if (current->localCount == UINT8_COUNT) {
-        error("Too many local variables in function.");
-        return;
+    if (current->localCount + 1 > current->localCapacity) {
+        int oldCapacity = current->localCapacity;
+        current->localCapacity = GROW_CAPACITY(oldCapacity);
+        current->locals = GROW_ARRAY(Local, current->locals,
+                oldCapacity, current->localCapacity);
     }
     Local* local = &current->locals[current->localCount++];
     local->name = name;
@@ -371,10 +375,6 @@ static void emitReturn() {
 
 static u8 makeConstant(Value value) {
     int constant = addConstant(currentChunk(), value);
-    if (constant > UINT8_MAX) {
-        error("Too many constants in one chunk.");
-        return 0;
-    }
 
     return (u8)constant;
 }
@@ -387,6 +387,8 @@ static void initCompiler(Compiler* compiler) {
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
     current = compiler;
+    compiler->locals = (Local*)malloc(sizeof(Local) * 128);
+    compiler->localCapacity = 128;
 }
 
 static void number(bool canAssign) {
@@ -425,6 +427,7 @@ static void variable(bool canAssign) {
 
 static void endCompiler() {
     emitReturn();
+    FREE_ARRAY(Local, current->locals,  current->localCapacity);
 #ifdef DEBUG_PRINT_CODE
     if (!parser.hadError) {
         disassembleChunk(currentChunk(), "code");
