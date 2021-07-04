@@ -47,6 +47,7 @@ typedef struct {
 
 typedef struct {
     Local locals[UINT8_COUNT];
+    Table localsTable;
     int localCount;
     int scopeDepth;
 } Compiler;
@@ -243,7 +244,10 @@ static bool identifiersEqual(Token* a, Token* b) {
 }
 
 static int resolveLocal(Compiler* compiler, Token* name) {   // NOTE(kk): Why pass compiler here ??
-    for (int i = compiler->localCount - 1; i >= 0; i--) {
+    Value value;
+    ObjString* nameStr = copyString(name->start, name->length);
+    if (tableGet(&compiler->localsTable, nameStr, &value)) {
+        int i = AS_NUMBER(value);
         Local* local = &compiler->locals[i];
         if (identifiersEqual(name, &local->name)) {
             if (local->depth == -1) {
@@ -260,9 +264,14 @@ static void addLocal(Token name) {
         error("Too many local variables in function.");
         return;
     }
-    Local* local = &current->locals[current->localCount++];
+    int index = current->localCount++;
+    Local* local = &current->locals[index];
     local->name = name;
     local->depth = -1;
+
+    Token nameToken = local->name;
+    ObjString* nameStr = copyString(nameToken.start, nameToken.length);
+    tableSet(&current->localsTable, nameStr, NUMBER_VAL(index));
 }
 
 static void declareVariable() {
@@ -384,6 +393,7 @@ static void emitConstant(Value value) {
 }
 
 static void initCompiler(Compiler* compiler) {
+    initTable(&compiler->localsTable);
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
     current = compiler;
@@ -425,6 +435,7 @@ static void variable(bool canAssign) {
 
 static void endCompiler() {
     emitReturn();
+    freeTable(&current->localsTable);
 #ifdef DEBUG_PRINT_CODE
     if (!parser.hadError) {
         disassembleChunk(currentChunk(), "code");
