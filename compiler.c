@@ -47,6 +47,7 @@ typedef struct {
 
 typedef struct {
     Local locals[UINT8_COUNT];
+    Table constVariables;
     int localCount;
     int scopeDepth;
 } Compiler;
@@ -201,6 +202,16 @@ static void parsePrecedence(Precedence precedence) {
     }
 
     bool canAssign = precedence <= PREC_ASSIGNMENT;
+
+    Token nameToken = parser.previous;
+    ObjString* nameStr = copyString(nameToken.start, nameToken.length);
+    Value val;
+    if(tableGet(&current->constVariables, nameStr, &val)) {
+         /*error("Attempted to change constant value");*/
+         /*error("Attempted to change constant value");*/
+         canAssign = false;
+    }
+
     prefixRule(canAssign);
 
     while (precedence <= getRule(parser.current.type)->precedence) {
@@ -308,6 +319,14 @@ static void varDeclaration() {
     defineVariable(global);
 }
 
+static void constDeclaration() {
+    consume(TOKEN_VAR, "Expect 'var' after 'const' declaration.");
+    varDeclaration();
+    Token* nameToken = &parser.current;
+    ObjString* nameStr = copyString(nameToken->start, nameToken->length);
+    tableSet(&current->constVariables, nameStr, NIL_VAL);
+}
+
 static void expressionStatement() {
     expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after expression.");
@@ -329,6 +348,7 @@ static void synchronize() {
             case TOKEN_CLASS:
             case TOKEN_FUN:
             case TOKEN_VAR:
+            case TOKEN_CONST:
             case TOKEN_FOR:
             case TOKEN_IF:
             case TOKEN_WHILE:
@@ -347,6 +367,9 @@ static void synchronize() {
 static void declaration() {
     if (match(TOKEN_VAR)) {
         varDeclaration();
+    }
+    else if (match(TOKEN_CONST)) {
+        constDeclaration();
     } else {
         statement();
     }
@@ -386,6 +409,7 @@ static void emitConstant(Value value) {
 static void initCompiler(Compiler* compiler) {
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
+    initTable(&compiler->constVariables);
     current = compiler;
 }
 
@@ -411,12 +435,17 @@ static void namedVariable(Token name, bool canAssign) {
         setOp = OP_SET_GLOBAL;
     }
 
+    if (!canAssign){
+         error("Attempted to assign to a constant variable");
+    }
+
     if (canAssign && match(TOKEN_EQUAL)) {
         expression();
         emitBytes(setOp, (uint8_t)arg);
     } else {
         emitBytes(getOp, (uint8_t)arg);
     }
+
 }
 
 static void variable(bool canAssign) {
@@ -425,6 +454,7 @@ static void variable(bool canAssign) {
 
 static void endCompiler() {
     emitReturn();
+    freeTable(&current->constVariables);
 #ifdef DEBUG_PRINT_CODE
     if (!parser.hadError) {
         disassembleChunk(currentChunk(), "code");
