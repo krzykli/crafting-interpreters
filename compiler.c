@@ -207,8 +207,6 @@ static void parsePrecedence(Precedence precedence) {
     ObjString* nameStr = copyString(nameToken.start, nameToken.length);
     Value val;
     if(tableGet(&current->constVariables, nameStr, &val)) {
-         /*error("Attempted to change constant value");*/
-         /*error("Attempted to change constant value");*/
          canAssign = false;
     }
 
