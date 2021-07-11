@@ -41,21 +41,21 @@ void freeVM() {
 }
 
 void push(Value value) {
-  *vm.stackTop = value;
-  vm.stackTop++;
+    *vm.stackTop = value;
+    vm.stackTop++;
 }
 
 Value pop() {
-  vm.stackTop--;
-  return *vm.stackTop;
+    vm.stackTop--;
+    return *vm.stackTop;
 }
 
 static Value peek(int distance) {
-  return vm.stackTop[-1 - distance];
+    return vm.stackTop[-1 - distance];
 }
 
 static bool isFalsey(Value value) {
-  return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
+    return IS_NIL(value) || (IS_BOOL(value) && !AS_BOOL(value));
 }
 
 static void concatenate() {
@@ -76,6 +76,8 @@ static InterpretResult run() {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
 #define READ_STRING() AS_STRING(READ_CONSTANT())
+#define READ_SHORT() \
+    (vm.ip += 2, (uint16_t)((vm.ip[-2] << 8) | vm.ip[-1]))
 #define BINARY_OP(valueType, op) \
     do { \
         if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
@@ -104,6 +106,21 @@ static InterpretResult run() {
         switch (instruction = READ_BYTE()) {
             case OP_RETURN: {
                 return INTERPRET_OK;
+            }
+            case OP_JUMP_IF_FALSE: {
+                uint16_t offset = READ_SHORT();
+                if (isFalsey(peek(0))) vm.ip += offset;
+                break;
+            }
+            case OP_JUMP: {
+                uint16_t offset = READ_SHORT();
+                vm.ip += offset;
+                break;
+            }
+            case OP_LOOP: {
+                uint16_t offset = READ_SHORT();
+                vm.ip -= offset;
+                break;
             }
             case OP_PRINT: {
                 printValue(pop());
@@ -198,6 +215,7 @@ static InterpretResult run() {
     }
 
 #undef READ_BYTE
+#undef READ_SHORT
 #undef READ_CONSTANT
 #undef READ_STRING
 #undef BINARY_OP
