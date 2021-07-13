@@ -53,6 +53,7 @@ typedef struct {
 
 Parser parser;
 Compiler* current = NULL;
+int continueJump;
 
 Chunk* compilingChunk;
 
@@ -411,11 +412,17 @@ static void printStatement() {
     emitByte(OP_PRINT);
 }
 
+int continueStatement() {
+    consume(TOKEN_SEMICOLON, "Expect ';' after continue.");
+    continueJump = currentChunk()->count;
+}
+
 static void whileStatement() {
     int loopStart = currentChunk()->count;
     consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+
 
     int exitJump = emitJump(OP_JUMP_IF_FALSE);
     emitByte(OP_POP);
@@ -424,6 +431,14 @@ static void whileStatement() {
 
     patchJump(exitJump);
     emitByte(OP_POP);
+
+    if(continueJump) {
+        int offset = continueJump - loopStart;
+        emitByte(OP_JUMP);
+        patchJump(offset);
+        continueJump = 0;
+        emitByte(OP_POP);
+    }
 }
 
 static void synchronize() {
@@ -438,6 +453,7 @@ static void synchronize() {
             case TOKEN_FOR:
             case TOKEN_IF:
             case TOKEN_WHILE:
+            case TOKEN_CONTINUE:
             case TOKEN_PRINT:
             case TOKEN_RETURN:
                 return;
@@ -459,7 +475,7 @@ static void declaration() {
     if (parser.panicMode) synchronize();
 }
 
-static void statement() {
+void statement() {
     if (match(TOKEN_PRINT)) {
         printStatement();
     } else if (match(TOKEN_IF)) {
@@ -468,6 +484,8 @@ static void statement() {
         whileStatement();
     } else if (match(TOKEN_FOR)) {
         forStatement();
+    } else if (match(TOKEN_CONTINUE)) {
+        continueStatement();
     } else if (match(TOKEN_LEFT_BRACE)) {
         beginScope();
         block();
@@ -622,6 +640,7 @@ ParseRule rules[] = {
     [TOKEN_TRUE]          = {literal,  NULL,   PREC_NONE},
     [TOKEN_VAR]           = {NULL,     NULL,   PREC_NONE},
     [TOKEN_WHILE]         = {NULL,     NULL,   PREC_NONE},
+    [TOKEN_CONTINUE]      = {NULL,     NULL,   PREC_NONE},
     [TOKEN_ERROR]         = {NULL,     NULL,   PREC_NONE},
     [TOKEN_EOF]           = {NULL,     NULL,   PREC_NONE},
 };

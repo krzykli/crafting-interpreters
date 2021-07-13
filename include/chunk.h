@@ -30,6 +30,7 @@ typedef enum {
     OP_JUMP,
     OP_JUMP_IF_FALSE,
     OP_LOOP,
+    OP_CONTINUE,
     OP_ADD,
     OP_SUBTRACT,
     OP_MULTIPLY,
