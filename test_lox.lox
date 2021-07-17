@@ -13,3 +13,8 @@ print breakfast;
     }
     print test_var + test_var2;
 }
+fun areWeHavingItYet() {
+  print "Yes we are!";
+}
+
+print areWeHavingItYet;
