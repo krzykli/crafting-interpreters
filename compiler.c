@@ -423,22 +423,20 @@ static void whileStatement() {
     expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
 
-
     int exitJump = emitJump(OP_JUMP_IF_FALSE);
     emitByte(OP_POP);
     statement();
     emitLoop(loopStart);
 
-    patchJump(exitJump);
-    emitByte(OP_POP);
-
     if(continueJump) {
         int offset = continueJump - loopStart;
-        emitByte(OP_JUMP);
-        patchJump(offset);
-        continueJump = 0;
+        emitLoop(loopStart);
+        patchJump(continueJump);
         emitByte(OP_POP);
     }
+
+    patchJump(exitJump);
+    emitByte(OP_POP);
 }
 
 static void synchronize() {
