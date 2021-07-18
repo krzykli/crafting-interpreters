@@ -8,11 +8,13 @@
 #include "object.h"
 #include "memory.h"
 #include "vm.h"
+#include <math.h>
 
 VM vm; 
 
 static Value clockNative(int argCount, Value* args) {
-    return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+    /*return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);*/
+    return NUMBER_VAL((double)sqrt(AS_NUMBER(args[0])));
 }
 
 static void resetStack() {
@@ -48,9 +50,9 @@ static void runtimeError(const char* format, ...) {
     resetStack();
 }
 
-static void defineNative(const char* name, NativeFn function) {
+static void defineNative(const char* name, NativeFn function, int argCount) {
     push(OBJ_VAL(copyString(name, (int)strlen(name))));
-    push(OBJ_VAL(newNative(function)));
+    push(OBJ_VAL(newNative(function, argCount)));
     tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
     pop();
     pop();
@@ -62,7 +64,7 @@ void initVM() {
     initTable(&vm.globals);
     initTable(&vm.strings);
 
-    defineNative("clock", clockNative);
+    defineNative("clock", clockNative, 1);
 }
 
 void freeVM() {
@@ -108,8 +110,13 @@ static bool callValue(Value callee, int argCount) {
             case OBJ_FUNCTION: 
                 return call(AS_FUNCTION(callee), argCount);
             case OBJ_NATIVE: {
-                NativeFn native = AS_NATIVE(callee);
-                Value result = native(argCount, vm.stackTop - argCount);
+                ObjNative* nativeObj = (ObjNative*)AS_OBJ(callee);
+                if (argCount != nativeObj->arity) {
+                    runtimeError("Expected %d arguments but got %d.",
+                    nativeObj->arity, argCount);
+                    return false;
+                }
+                Value result = nativeObj->function(argCount, vm.stackTop - argCount);
                 vm.stackTop -= argCount + 1;
                 push(result);
                 return true;

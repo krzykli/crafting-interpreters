@@ -1,24 +1,2 @@
-print 1;
-print 2;
-
-var breakfast = "beignets";
-var beverage = "cafe au lait";
-breakfast = "beignets with " + beverage;
-print breakfast;
-{
-    var test_var = "what is this ";
-    var test_var2 = "thing";
-    {
-        var test_var2 = "thing";
-    }
-    print test_var + test_var2;
-}
-
-fun fib(n) {
-  if (n < 2) return n;
-  return fib(n - 2) + fib(n - 1);
-}
-
+var start = clock("dummy");
 var start = clock();
-print fib(3);
-print clock() - start;
