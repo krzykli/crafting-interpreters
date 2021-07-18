@@ -47,10 +47,11 @@ ObjFunction* newFunction() {
     return function;
 }
 
-ObjNative* newNative(NativeFn function, int argCount) {
+ObjNative* newNative(NativeFn function, int argCount, ValueType* argTypes) {
     ObjNative* native = ALLOCATE_OBJ(ObjNative, OBJ_NATIVE);
     native->function = function;
     native->arity = argCount;
+    native->argTypes = argTypes;
     return native;
 }
 

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <stdarg.h>
 
@@ -11,11 +12,6 @@
 #include <math.h>
 
 VM vm; 
-
-static Value clockNative(int argCount, Value* args) {
-    /*return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);*/
-    return NUMBER_VAL((double)sqrt(AS_NUMBER(args[0])));
-}
 
 static void resetStack() {
     vm.stackTop = vm.stack;
@@ -50,9 +46,25 @@ static void runtimeError(const char* format, ...) {
     resetStack();
 }
 
-static void defineNative(const char* name, NativeFn function, int argCount) {
+
+static Value sqrtNative(int argCount, Value* args, ValueType* argTypes) {
+    /*return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);*/
+    for(int i = 0; i < argCount; i++){
+        Value value = args[i];
+        ValueType expectedType = (ValueType)argTypes[i];
+        if(value.type != expectedType) {
+             runtimeError("Type mismatch ");
+             return NIL_VAL;
+        }
+    }
+
+    return NUMBER_VAL((double)sqrt(AS_NUMBER(args[0])));
+}
+
+
+static void defineNative(const char* name, NativeFn function, int argCount, ValueType* argTypes) {
     push(OBJ_VAL(copyString(name, (int)strlen(name))));
-    push(OBJ_VAL(newNative(function, argCount)));
+    push(OBJ_VAL(newNative(function, argCount, argTypes)));
     tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
     pop();
     pop();
@@ -64,7 +76,11 @@ void initVM() {
     initTable(&vm.globals);
     initTable(&vm.strings);
 
-    defineNative("clock", clockNative, 1);
+
+    int clockArgCount = 1;
+    ValueType* argTypes = (ValueType*)malloc(sizeof(ValueType) * clockArgCount);
+    argTypes[0] = VAL_NUMBER;
+    defineNative("sqrt", sqrtNative, 1, argTypes);
 }
 
 void freeVM() {
@@ -116,7 +132,7 @@ static bool callValue(Value callee, int argCount) {
                     nativeObj->arity, argCount);
                     return false;
                 }
-                Value result = nativeObj->function(argCount, vm.stackTop - argCount);
+                Value result = nativeObj->function(argCount, vm.stackTop - argCount, nativeObj->argTypes);
                 vm.stackTop -= argCount + 1;
                 push(result);
                 return true;

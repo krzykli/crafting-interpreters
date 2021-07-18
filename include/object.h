@@ -38,12 +38,13 @@ typedef struct {
   ObjString* name;
 } ObjFunction;
 
-typedef Value (*NativeFn)(int argCount, Value* args);
+typedef Value (*NativeFn)(int argCount, Value* args, ValueType* argTypes);
 
 typedef struct {
     Obj obj;
     int arity;
     NativeFn function;
+    ValueType* argTypes;
 } ObjNative;
 
 struct ObjString {
@@ -55,7 +56,7 @@ struct ObjString {
 
 ObjString* copyString(const char* chars, int length);
 ObjFunction* newFunction();
-ObjNative* newNative(NativeFn function, int argCount);
+ObjNative* newNative(NativeFn function, int argCount, ValueType* argTypes);
 ObjString* takeString(char* chars, int length);
 
 static inline bool isObjType(Value value, ObjType type) {
