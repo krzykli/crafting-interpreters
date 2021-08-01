@@ -2,6 +2,7 @@
 #define clox_memory_h
 
 #include "common.h"
+#include "compiler.h"
 #include "object.h"
 
 
@@ -25,6 +26,10 @@
 
 
 void* reallocate(void* pointer, size_t oldSize, size_t newSize);
+void markValue(Value value);
+void markObject(Obj* object);
 void freeObjects();
+void collectGarbage();
+
 
 #endif

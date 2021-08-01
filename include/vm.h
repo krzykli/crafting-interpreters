@@ -33,6 +33,11 @@ typedef struct {
     Table globals;
     Table strings;
     Obj* objects;
+    int grayCount;
+    int grayCapacity;
+    Obj** grayStack;
+    size_t bytesAllocated;
+    size_t nextGC;
 } VM;
 
 void initVM();
