@@ -1,11 +1,4 @@
-fun makeClosure(value) {
-  fun closure() {
-    print value;
-  }
-  return closure;
-}
-
-var doughnut = makeClosure("doughnut");
-var bagel = makeClosure("bagel");
-doughnut();
-bagel();
+class Toast {}
+var toast = Toast();
+print toast.jam = "grape";
+print toast.noexiste;
