@@ -1,4 +1,17 @@
 class Toast {}
 var toast = Toast();
 print toast.jam = "grape";
-print toast.noexiste;
+
+print hasProperty(toast, "testProperty");
+
+if (!hasProperty(toast, "testProperty")) {
+    setProperty(toast, "testProperty", "this is a dynamically created 'testProperty'");
+}
+print toast.testProperty;
+
+if (hasProperty(toast, "testProperty")) {
+    print "removing 'testProperty'";
+    deleteProperty(toast, "testProperty");
+}
+
+print toast.testProperty;

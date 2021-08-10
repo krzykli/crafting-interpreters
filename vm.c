@@ -15,6 +15,42 @@ static Value clockNative(int argCount, Value* args) {
     return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
 }
 
+static Value hasPropertyNative(int argCount, Value* args) {
+    ObjInstance* instance = AS_INSTANCE(args[0]);
+    ObjString* property = AS_STRING(args[1]);
+
+    Value value;
+    if (tableGet(&instance->fields, property, &value)) {
+        return BOOL_VAL(true);
+    }
+    return BOOL_VAL(false);
+}
+
+static Value setPropertyNative(int argCount, Value* args) {
+    ObjInstance* instance = AS_INSTANCE(args[0]);
+    ObjString* propertyName = AS_STRING(args[1]);
+    Value propertyValue = args[2];
+
+    Value valueProbe;
+    if (!tableGet(&instance->fields, propertyName, &valueProbe)) {
+        tableSet(&instance->fields, propertyName, propertyValue);
+        return BOOL_VAL(true);
+    }
+    return BOOL_VAL(false);
+}
+
+static Value deletePropertyNative(int argCount, Value* args) {
+    ObjInstance* instance = AS_INSTANCE(args[0]);
+    ObjString* propertyName = AS_STRING(args[1]);
+
+    Value valueProbe;
+    if (tableGet(&instance->fields, propertyName, &valueProbe)) {
+        tableDelete(&instance->fields, propertyName);
+        return BOOL_VAL(true);
+    }
+    return BOOL_VAL(false);
+}
+
 static void resetStack() {
     vm.stackTop = vm.stack;
     vm.frameCount = 0;
@@ -70,6 +106,9 @@ void initVM() {
     initTable(&vm.strings);
 
     defineNative("clock", clockNative);
+    defineNative("hasProperty", hasPropertyNative);
+    defineNative("setProperty", setPropertyNative);
+    defineNative("deleteProperty", deletePropertyNative);
 }
 
 void freeVM() {
