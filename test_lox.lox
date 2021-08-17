@@ -1,17 +1,33 @@
-class Toast {}
-var toast = Toast();
-print toast.jam = "grape";
-
-print hasProperty(toast, "testProperty");
-
-if (!hasProperty(toast, "testProperty")) {
-    setProperty(toast, "testProperty", "this is a dynamically created 'testProperty'");
-}
-print toast.testProperty;
-
-if (hasProperty(toast, "testProperty")) {
-    print "removing 'testProperty'";
-    deleteProperty(toast, "testProperty");
+class Person {
+    sayName() {
+        print this.name;
+    }
 }
 
-print toast.testProperty;
+var jane = Person();
+jane.name = "Jane";
+
+var method = jane.sayName;
+method(); // ?
+
+class Scone {
+    topping(first, second) {
+        print "scone with " + first + " and " + second;
+    }
+}
+
+var scone = Scone();
+scone.topping("berries", "cream");
+
+class Oops {
+    init() {
+        fun f() {
+            print "not a method";
+        }
+
+        this.field = f;
+    }
+}
+
+var oops = Oops();
+oops.field();
