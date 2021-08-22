@@ -71,6 +71,7 @@ ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method) {
 ObjClass* newClass(ObjString* name) {
     ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
     klass->name = name; 
+    klass->init = BOOL_VAL(false);
     initTable(&klass->methods);
     return klass;
 }

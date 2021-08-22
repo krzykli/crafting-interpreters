@@ -1,33 +1,15 @@
-class Person {
-    sayName() {
-        print this.name;
-    }
+class A {
+  method() {
+    print "A";
+  }
 }
 
-var jane = Person();
-jane.name = "Jane";
-
-var method = jane.sayName;
-method(); // ?
-
-class Scone {
-    topping(first, second) {
-        print "scone with " + first + " and " + second;
-    }
+class B < A {
+  method() {
+    var closure = super.method;
+    closure(); // Prints "A".
+  }
 }
 
-var scone = Scone();
-scone.topping("berries", "cream");
-
-class Oops {
-    init() {
-        fun f() {
-            print "not a method";
-        }
-
-        this.field = f;
-    }
-}
-
-var oops = Oops();
-oops.field();
+var obj = B();
+obj.method();
